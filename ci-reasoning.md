@@ -44,6 +44,12 @@ Every claim below is anchored to a real file + line in this fork.
   e.g. `docker-compose.yml:109` `qdrant/qdrant:latest` and `:185` `minio/minio:latest`
   (unpinned), and `dockerfiles/mcphub.Dockerfile:5` running as root. This is the
   config-as-data complement to hadolint's Dockerfile-syntax view.
+- It also surfaces **unencrypted database transport**: Casdoor's Postgres connection
+  hard-codes **`sslmode=disable`** (`docker-compose.yml:13`) and lobe-chat's
+  **`DATABASE_URL`** (`docker-compose.yml:32`,
+  `postgresql://postgres:…@postgres:5432/lobechat`) specifies **no TLS at all** — so the
+  DB password and all query traffic cross the network in cleartext. A misconfig gate
+  flags exactly this class of "works, but insecure" default before it reaches prod.
 
 ### 3. `docker compose config -q` (schema + interpolation, **never** `up`/`build`)
 - The 238-line `docker-compose.yml` mounts a host path with bracket-heavy syntax at
@@ -165,10 +171,11 @@ production pipeline for *this* system must make, each grounded in this fork.
    promoting.
 
 8. **Automated rollback over an immutable unit.** The current deploy unit is an
-   **unpinned image plus a bind-mounted monkeypatch** — `./patches/route.js` mounted over
-   the app at `docker-compose.yml:27`. That is not rollback-able. A real pipeline bakes
-   `patches/route.js` into a **forked, pinned** lobe-chat image and rolls back by
-   re-pointing to the previous digest.
+   **unpinned image plus a bind-mounted ~3.1 MB monkeypatch** — `./patches/route.js`
+   (3,284,170 bytes) mounted over the app at `docker-compose.yml:27`. That is not
+   rollback-able: the running code is an untagged image plus a committed blob. A real
+   pipeline bakes `patches/route.js` into a **forked, pinned** lobe-chat image and rolls
+   back by re-pointing to the previous digest.
 
 9. **Branch protection, required status checks, and signed release tags.** These CI gates
    should be **required** before merge, and releases cut as signed tags via `cz bump`
