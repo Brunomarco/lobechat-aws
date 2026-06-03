@@ -2,7 +2,7 @@
 #
 # HARD RULE: this pipeline NEVER starts the application. The stack is un-runnable
 # on a standard GitHub runner: the `vllm` service (docker-compose.yml:151-182)
-# requires an NVIDIA GPU and declares `start_period: 300s`, and the 11-service
+# requires an NVIDIA GPU and declares `start_period: 300s`, and the ten-service
 # dependency graph (lobe-chat depends_on vllm/minio/postgres/casdoor, etc.) cannot
 # come up here. So there is NO `docker build`, NO `docker compose up`/`run`, NO
 # deploy, and NO `pytest`. Every job below is a static gate that also runs offline.

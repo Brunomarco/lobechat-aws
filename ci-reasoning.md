@@ -51,7 +51,7 @@ Every claim below is anchored to a real file + line in this fork.
   (`./patches/route.js:/app/.next/server/app/(backend)/trpc/tools/[trpc]/route.js:ro`)
   and interpolates ~15 `${VAR}` values. `config -q` statically catches a malformed
   mount, a typo'd anchor, or an unresolvable variable **before** anyone tries to deploy —
-  without ever starting the GPU/11-service stack.
+  without ever starting the GPU/multi-service stack.
 
 ### 4. `gitleaks` over working tree + history
 - The stack passes real secrets as **plaintext env vars** — `NEXT_AUTH_SECRET`
@@ -81,9 +81,11 @@ The stack cannot run on a standard GitHub runner. The **`vllm`** service
 (`docker-compose.yml:151-182`) reserves an **NVIDIA GPU** (`:169-175`,
 `driver: nvidia`) and declares **`start_period: 300s`** (`:182`) on its healthcheck —
 GitHub-hosted runners have no GPU. On top of that, `lobe-chat` (`:66-74`) `depends_on`
-`postgres`, `casdoor`, `minio` and `vllm` being healthy, so the whole 11-service graph
-would have to come up. Therefore the pipeline runs **only static gates** — no
-`docker build`, no `docker compose up`/`run`, no deploy.
+`postgres`, `casdoor`, `minio` and `vllm` being healthy, so the whole interdependent
+service graph — the **ten** services defined in `docker-compose.yml` (`casdoor`,
+`lobe-chat`, `mcphub`, `qdrant`, `hayhooks`, `hayhooks-mcp`, `vllm`, `minio`,
+`linux-sandbox`, `postgres`) — would have to come up. Therefore the pipeline runs
+**only static gates** — no `docker build`, no `docker compose up`/`run`, no deploy.
 
 ### Why `tests/` are excluded
 `tests/` are **live-stack integration tests**, not unit tests. For example
@@ -141,9 +143,10 @@ production pipeline for *this* system must make, each grounded in this fork.
 4. **A database migration stage with the destructive path guarded.** The repo ships a
    Flyway toolchain — `db/flyway/provision.sh` with per-DB migrations under
    `db/flyway/{casdoor,litellm,lobechat}/`. The **`clean` target drops all data**
-   (`db/flyway/provision.sh:10`, run via `-cleanDisabled=false clean` at `:68-71`); a
-   production pipeline must run `migrate` automatically but place `clean` behind an
-   explicit manual approval so it can never fire on prod.
+   (`db/flyway/provision.sh:10`, run via `-cleanDisabled=false clean` at `:71`); today its
+   only guard is an **interactive `read` y/N prompt** (`:69-70`) — useless in a headless
+   pipeline. A production pipeline must run `migrate` automatically but place `clean`
+   behind a real **protected-environment manual approval** so it can never fire on prod.
 
 5. **Environment promotion dev → stage → prod with protected environments / manual
    approval.** There is no notion of environments anywhere in the repo; a single
