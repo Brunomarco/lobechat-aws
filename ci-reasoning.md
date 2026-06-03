@@ -6,8 +6,8 @@
 
 - **Repository:** `Brunomarco/lobechat-aws`
 - **Workflow:** `CI (build-free static analysis)` (`.github/workflows/ci.yml`)
-- **Actions run URL:** `<<RUN_URL>>`
-- **Commit SHA the run executed against:** `<<RUN_SHA>>`
+- **Actions run URL:** https://github.com/Brunomarco/lobechat-aws/actions/runs/26869796491
+- **Commit SHA the run executed against:** `01d445bada9608d8984b13cabf7b900e3f4e0105`
 - **Branch:** `ci/build-free-static-analysis`
 
 The screenshot shows my own repository/owner, the run, the list of jobs (`hadolint`,
